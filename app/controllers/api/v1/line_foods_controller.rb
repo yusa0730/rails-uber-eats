@@ -6,7 +6,7 @@ module Api
       # onlyオプションをつけることで、特定のアクションの実行前にだけ追加するということができます。
       # before_actionではそのコントローラーのメインアクションに入る"前"におこなう処理を挟むことができる。
       # これをcallbackという。
-      before_action :set_food, only: %i[create]
+      before_action :set_food, only: %i[create, replace]
 
       # 作成された仮注文一覧を取得するメソッド(index)です。
       # ここではフロントエンドで必要なデータもあわせてJSON形式で返すようにします。
@@ -55,7 +55,23 @@ module Api
 
       # 店舗Aで仮注文後に店舗Bで別の仮注文を作成しようとするケースです。
       # この場合には、前者(店舗A)を消して、後者の新しいものに置き換える(replace)という仕様でした。
-      def replace        
+      def replace
+        # 他店舗のactiveなLineFood一覧をLineFood.active.other_restaurant(@ordered_food.restaurant.id)で取得
+        # mapは最終的に配列を返します。eachはただ繰り返し処理を行うだけで、そのままでは配列は返しません。
+        LineFood.active.other_restaurant(@orderd_food.restaurant.id).each do |line_food|
+          line_food.update_attributes(:active, false)
+        end
+
+        # set_line_food(@ordered_food)とすることで、@line_foodというグローバル変数が生成されます
+        set_line_food(@orderd_food)
+
+        if @line_food.save
+          render json: {
+            line_food: @line_food
+          }, status: :created
+        else
+          render json: {}, status: :internal_server_error
+        end
       end
 
       private
