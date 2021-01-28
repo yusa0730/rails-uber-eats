@@ -8,6 +8,22 @@ module Api
       # これをcallbackという。
       before_action :set_food, only: %i[create]
 
+      # 作成された仮注文一覧を取得するメソッド(index)です。
+      # ここではフロントエンドで必要なデータもあわせてJSON形式で返すようにします。
+      def index
+        line_foods = LineFood.active.all
+        if line_foods.exists?
+          render json: {
+            line_food_ids: line_foods.map { |line_food| line_food.id },
+            restaurant: line_foods[0].restaurant,
+            count: line_foods.sum { |line_food| line_food[:count] },
+            amount: line_foods.sum {}
+          }, status: :ok
+        else
+          render json: {}, status: :no_content
+        end
+      end
+
       # 仮注文を作成するメソッド(create)
       # パラメーターには「どのフード？」、また「それをいくつ？(数量)」という２つが必要です。
       def create
@@ -29,12 +45,6 @@ module Api
         else
           render json:{}, status: :internal_server_error
         end
-      end
-
-
-      # 作成された仮注文一覧を取得するメソッド(index)です。
-      # ここではフロントエンドで必要なデータもあわせてJSON形式で返すようにします。
-      def index        
       end
 
       # 店舗Aで仮注文後に店舗Bで別の仮注文を作成しようとするケースです。
