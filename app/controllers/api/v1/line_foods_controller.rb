@@ -12,14 +12,20 @@ module Api
       # ここではフロントエンドで必要なデータもあわせてJSON形式で返すようにします。
       def index
         line_foods = LineFood.active.all
+        # .exists?メソッドは対象のインスタンスのデータがDBに存在するかどうか？をtrue/falseで返すメソッドです。
         if line_foods.exists?
           render json: {
+            # line_foodsというインスタンスそれぞれをline_foodという単数形の変数名でとって、line_food.idとして１つずつのidを取得しています。
             line_food_ids: line_foods.map { |line_food| line_food.id },
+            # １つの仮注文につき１つの店舗という仕様のため、line_foodsの中にある先頭のline_foodインスタンスの店舗の情報を詰めています。
+            # これはline_foods.first.restaurantでも同様です。
             restaurant: line_foods[0].restaurant,
             count: line_foods.sum { |line_food| line_food[:count] },
-            amount: line_foods.sum {}
+            amount: line_foods.sum { |line_food| line_food.total_amount }
           }, status: :ok
         else
+        # if line_foods.exists?の結果がfalse、つまりactiveなLineFoodが一つも存在しないケース
+        # 空データとstatus: :no_contentを返す
           render json: {}, status: :no_content
         end
       end
