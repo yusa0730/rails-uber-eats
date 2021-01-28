@@ -15,7 +15,7 @@ class LineFood < ApplicationRecord
   # もし「他の店舗のLineFood」があった場合、ここには１つ以上の関連するActiveRecord_Relationが入ります。
   scope :other_restaurant, -> (picked_restaurant_id) {where.not(restaurant_id: picked_restaurant_id)}
 
-  def total_price
+  def total_amount
     food.price * count
   end
 end
